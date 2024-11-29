@@ -1,0 +1,115 @@
+import os
+import tkinter as tk
+from tkinter import filedialog, messagebox
+from pygame import mixer
+
+class MusicPlayer:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Python Music Player")
+        self.root.geometry("400x300")
+
+        mixer.init()
+        self.current_track = None
+        self.is_paused = False
+
+        # Playlist
+        self.playlist = []
+
+        # UI Components
+        self.track_label = tk.Label(self.root, text="No Track Selected", font=("Helvetica", 12), wraplength=300)
+        self.track_label.pack(pady=10)
+
+        self.control_frame = tk.Frame(self.root)
+        self.control_frame.pack(pady=10)
+
+        self.play_button = tk.Button(self.control_frame, text="Play", command=self.play_music)
+        self.play_button.grid(row=0, column=0, padx=5)
+
+        self.pause_button = tk.Button(self.control_frame, text="Pause", command=self.pause_music)
+        self.pause_button.grid(row=0, column=1, padx=5)
+
+        self.stop_button = tk.Button(self.control_frame, text="Stop", command=self.stop_music)
+        self.stop_button.grid(row=0, column=2, padx=5)
+
+        self.next_button = tk.Button(self.control_frame, text="Next", command=self.next_track)
+        self.next_button.grid(row=0, column=3, padx=5)
+
+        self.prev_button = tk.Button(self.control_frame, text="Previous", command=self.previous_track)
+        self.prev_button.grid(row=0, column=4, padx=5)
+
+        self.volume_scale = tk.Scale(self.root, from_=0, to=100, orient="horizontal", label="Volume", command=self.set_volume)
+        self.volume_scale.set(50)
+        self.volume_scale.pack(pady=10)
+        mixer.music.set_volume(0.5)
+
+        self.add_button = tk.Button(self.root, text="Add Music", command=self.add_music)
+        self.add_button.pack(pady=10)
+
+        self.playlist_box = tk.Listbox(self.root, selectmode=tk.SINGLE)
+        self.playlist_box.pack(fill="both", expand=True, pady=10)
+
+    def add_music(self):
+        files = filedialog.askopenfilenames(filetypes=[("Audio Files", "*.mp3;*.wav")])
+        for file in files:
+            self.playlist.append(file)
+            self.playlist_box.insert(tk.END, os.path.basename(file))
+
+    def play_music(self):
+        if not self.playlist:
+            messagebox.showwarning("No Music", "Please add music to the playlist.")
+            return
+
+        if self.is_paused:
+            mixer.music.unpause()
+            self.is_paused = False
+            return
+
+        selected_index = self.playlist_box.curselection()
+        if selected_index:
+            self.current_track = selected_index[0]
+        else:
+            self.current_track = 0
+            self.playlist_box.select_set(self.current_track)
+
+        track_path = self.playlist[self.current_track]
+        mixer.music.load(track_path)
+        mixer.music.play()
+
+        self.track_label.config(text=f"Playing: {os.path.basename(track_path)}")
+
+    def pause_music(self):
+        if mixer.music.get_busy():
+            mixer.music.pause()
+            self.is_paused = True
+
+    def stop_music(self):
+        mixer.music.stop()
+        self.is_paused = False
+        self.track_label.config(text="No Track Selected")
+
+    def next_track(self):
+        if not self.playlist:
+            return
+
+        self.current_track = (self.current_track + 1) % len(self.playlist)
+        self.playlist_box.select_clear(0, tk.END)
+        self.playlist_box.select_set(self.current_track)
+        self.play_music()
+
+    def previous_track(self):
+        if not self.playlist:
+            return
+
+        self.current_track = (self.current_track - 1) % len(self.playlist)
+        self.playlist_box.select_clear(0, tk.END)
+        self.playlist_box.select_set(self.current_track)
+        self.play_music()
+
+    def set_volume(self, value):
+        mixer.music.set_volume(int(value) / 100)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = MusicPlayer(root)
+    root.mainloop()
