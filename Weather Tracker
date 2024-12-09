@@ -1,0 +1,50 @@
+# Weather Tracker
+# This script fetches and displays weather information for a given city.
+# It uses the OpenWeatherMap API to retrieve weather data.
+
+import requests
+
+# Function to fetch weather data from OpenWeatherMap API
+def get_weather(city, api_key):
+    base_url = "http://api.openweathermap.org/data/2.5/weather"
+    params = {
+        "q": city,
+        "appid": api_key,
+        "units": "metric"  # Get temperature in Celsius
+    }
+    try:
+        response = requests.get(base_url, params=params)
+        response.raise_for_status()
+        data = response.json()
+        return data
+    except requests.exceptions.RequestException as e:
+        print(f"Error fetching weather data: {e}")
+        return None
+
+# Function to display weather data
+def display_weather(data):
+    if data:
+        city = data.get("name")
+        country = data["sys"].get("country")
+        temp = data["main"].get("temp")
+        weather = data["weather"][0].get("description")
+        print(f"\nWeather in {city}, {country}:")
+        print(f"Temperature: {temp}°C")
+        print(f"Condition: {weather.capitalize()}")
+    else:
+        print("Unable to display weather data.")
+
+# Main function
+def main():
+    print("Weather Tracker")
+    api_key = input("Enter your OpenWeatherMap API key: ")
+    while True:
+        city = input("\nEnter the city name (or type 'exit' to quit): ")
+        if city.lower() == 'exit':
+            print("Goodbye!")
+            break
+        weather_data = get_weather(city, api_key)
+        display_weather(weather_data)
+
+if __name__ == "__main__":
+    main()
