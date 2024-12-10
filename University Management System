@@ -1,0 +1,124 @@
+# University Management System
+
+# Base Classes
+class Person:
+    def __init__(self, name, age, email):
+        self.name = name
+        self.age = age
+        self.email = email
+
+    def __str__(self):
+        return f"Name: {self.name}, Age: {self.age}, Email: {self.email}"
+
+# Subclasses for specific roles
+class Student(Person):
+    def __init__(self, name, age, email, student_id):
+        super().__init__(name, age, email)
+        self.student_id = student_id
+        self.enrolled_courses = []
+
+    def enroll(self, course):
+        self.enrolled_courses.append(course)
+
+    def __str__(self):
+        courses = ", ".join([course.name for course in self.enrolled_courses]) or "None"
+        return super().__str__() + f", Student ID: {self.student_id}, Enrolled Courses: {courses}"
+
+class Professor(Person):
+    def __init__(self, name, age, email, employee_id):
+        super().__init__(name, age, email)
+        self.employee_id = employee_id
+        self.courses = []
+
+    def assign_course(self, course):
+        self.courses.append(course)
+
+    def __str__(self):
+        courses = ", ".join([course.name for course in self.courses]) or "None"
+        return super().__str__() + f", Employee ID: {self.employee_id}, Courses: {courses}"
+
+# Course Class
+class Course:
+    def __init__(self, name, code, professor):
+        self.name = name
+        self.code = code
+        self.professor = professor
+        self.students = []
+
+    def add_student(self, student):
+        self.students.append(student)
+
+    def __str__(self):
+        students = ", ".join([student.name for student in self.students]) or "None"
+        return f"Course Name: {self.name}, Code: {self.code}, Professor: {self.professor.name}, Students: {students}"
+
+# University Class to manage everything
+class University:
+    def __init__(self, name):
+        self.name = name
+        self.students = []
+        self.professors = []
+        self.courses = []
+
+    def add_student(self, student):
+        self.students.append(student)
+
+    def add_professor(self, professor):
+        self.professors.append(professor)
+
+    def add_course(self, course):
+        self.courses.append(course)
+
+    def display_students(self):
+        print("Students:")
+        for student in self.students:
+            print(student)
+
+    def display_professors(self):
+        print("Professors:")
+        for professor in self.professors:
+            print(professor)
+
+    def display_courses(self):
+        print("Courses:")
+        for course in self.courses:
+            print(course)
+
+# Example usage
+if __name__ == "__main__":
+    # Create a university
+    uni = University("Tech University")
+
+    # Add professors
+    prof1 = Professor("Dr. Smith", 45, "smith@uni.edu", "P001")
+    prof2 = Professor("Dr. Johnson", 50, "johnson@uni.edu", "P002")
+    uni.add_professor(prof1)
+    uni.add_professor(prof2)
+
+    # Add courses
+    course1 = Course("Computer Science", "CS101", prof1)
+    course2 = Course("Mathematics", "MATH101", prof2)
+    uni.add_course(course1)
+    uni.add_course(course2)
+    prof1.assign_course(course1)
+    prof2.assign_course(course2)
+
+    # Add students
+    student1 = Student("Alice", 20, "alice@student.uni.edu", "S001")
+    student2 = Student("Bob", 21, "bob@student.uni.edu", "S002")
+    uni.add_student(student1)
+    uni.add_student(student2)
+
+    # Enroll students in courses
+    student1.enroll(course1)
+    course1.add_student(student1)
+
+    student2.enroll(course2)
+    course2.add_student(student2)
+
+    # Display data
+    uni.display_students()
+    print()
+    uni.display_professors()
+    print()
+    uni.display_courses()
