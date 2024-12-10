@@ -1,0 +1,143 @@
+import turtle
+import random
+import time
+
+# Set up the screen
+win = turtle.Screen()
+win.title("Space Invaders")
+win.bgcolor("black")
+win.setup(width=800, height=600)
+win.tracer(0)
+
+# Draw border
+border = turtle.Turtle()
+border.speed(0)
+border.color("white")
+border.penup()
+border.goto(-300, -300)
+border.pendown()
+for _ in range(4):
+    border.forward(600)
+    border.left(90)
+border.hideturtle()
+
+# Player
+player = turtle.Turtle()
+player.speed(0)
+player.shape("triangle")
+player.color("blue")
+player.penup()
+player.goto(0, -250)
+player.setheading(90)
+player_speed = 15
+
+# Player bullet
+bullet = turtle.Turtle()
+bullet.speed(0)
+bullet.shape("circle")
+bullet.color("red")
+bullet.penup()
+bullet.shapesize(0.5, 0.5)
+bullet.hideturtle()
+bullet_speed = 20
+bullet_state = "ready"  # "ready" or "fired"
+
+# Enemy
+enemy = turtle.Turtle()
+enemy.speed(0)
+enemy.shape("square")
+enemy.color("green")
+enemy.penup()
+enemy.goto(0, 250)
+enemy_speed = 5
+
+# Score
+score = 0
+score_display = turtle.Turtle()
+score_display.speed(0)
+score_display.color("white")
+score_display.penup()
+score_display.hideturtle()
+score_display.goto(0, 260)
+score_display.write(f"Score: {score}", align="center", font=("Courier", 24, "normal"))
+
+# Player movement
+def move_left():
+    x = player.xcor()
+    x -= player_speed
+    if x < -280:
+        x = -280
+    player.setx(x)
+
+def move_right():
+    x = player.xcor()
+    x += player_speed
+    if x > 280:
+        x = 280
+    player.setx(x)
+
+# Bullet firing
+def fire_bullet():
+    global bullet_state
+    if bullet_state == "ready":
+        bullet_state = "fired"
+        bullet.goto(player.xcor(), player.ycor() + 10)
+        bullet.showturtle()
+
+# Check for collision
+def is_collision(t1, t2):
+    distance = ((t1.xcor() - t2.xcor()) ** 2 + (t1.ycor() - t2.ycor()) ** 2) ** 0.5
+    return distance < 20
+
+# Keyboard bindings
+win.listen()
+win.onkeypress(move_left, "Left")
+win.onkeypress(move_right, "Right")
+win.onkeypress(fire_bullet, "space")
+
+# Main game loop
+while True:
+    win.update()
+
+    # Move the enemy
+    x = enemy.xcor()
+    x += enemy_speed
+    enemy.setx(x)
+
+    # Reverse enemy direction and move down
+    if enemy.xcor() > 280 or enemy.xcor() < -280:
+        enemy_speed *= -1
+        y = enemy.ycor()
+        y -= 40
+        enemy.sety(y)
+
+    # Move the bullet
+    if bullet_state == "fired":
+        y = bullet.ycor()
+        y += bullet_speed
+        bullet.sety(y)
+
+    # Check if the bullet has gone off the screen
+    if bullet.ycor() > 280:
+        bullet.hideturtle()
+        bullet_state = "ready"
+
+    # Check for collision between bullet and enemy
+    if is_collision(bullet, enemy):
+        bullet.hideturtle()
+        bullet_state = "ready"
+        bullet.goto(0, -400)
+        enemy.goto(random.randint(-250, 250), random.randint(100, 250))
+        score += 10
+        score_display.clear()
+        score_display.write(f"Score: {score}", align="center", font=("Courier", 24, "normal"))
+
+    # Check for game over
+    if enemy.ycor() < -250:
+        score_display.clear()
+        score_display.write("GAME OVER", align="center", font=("Courier", 30, "bold"))
+        break
+
+    time.sleep(0.01)
+
+win.mainloop()
