@@ -1,0 +1,142 @@
+# Hospital Management System
+
+import datetime
+
+# Base class for Person
+class Person:
+    def __init__(self, name, age, gender):
+        self.name = name
+        self.age = age
+        self.gender = gender
+
+    def __str__(self):
+        return f"Name: {self.name}, Age: {self.age}, Gender: {self.gender}"
+
+
+# Patient class
+class Patient(Person):
+    def __init__(self, name, age, gender, patient_id):
+        super().__init__(name, age, gender)
+        self.patient_id = patient_id
+        self.appointments = []
+
+    def __str__(self):
+        appointments = ", ".join(
+            [f"{appt.date} with {appt.doctor.name}" for appt in self.appointments]
+        ) or "None"
+        return (
+            super().__str__()
+            + f", Patient ID: {self.patient_id}, Appointments: {appointments}"
+        )
+
+
+# Doctor class
+class Doctor(Person):
+    def __init__(self, name, age, gender, specialization, doctor_id):
+        super().__init__(name, age, gender)
+        self.specialization = specialization
+        self.doctor_id = doctor_id
+        self.appointments = []
+
+    def __str__(self):
+        appointments = ", ".join(
+            [f"{appt.date} with {appt.patient.name}" for appt in self.appointments]
+        ) or "None"
+        return (
+            super().__str__()
+            + f", Doctor ID: {self.doctor_id}, Specialization: {self.specialization}, Appointments: {appointments}"
+        )
+
+
+# Appointment class
+class Appointment:
+    def __init__(self, patient, doctor, date):
+        self.patient = patient
+        self.doctor = doctor
+        self.date = date
+
+    def __str__(self):
+        return f"Appointment on {self.date} - Patient: {self.patient.name}, Doctor: {self.doctor.name}"
+
+
+# Hospital class
+class Hospital:
+    def __init__(self, name):
+        self.name = name
+        self.patients = []
+        self.doctors = []
+        self.appointments = []
+
+    def add_patient(self, name, age, gender, patient_id):
+        patient = Patient(name, age, gender, patient_id)
+        self.patients.append(patient)
+        print(f"Patient '{name}' added to the hospital.")
+
+    def add_doctor(self, name, age, gender, specialization, doctor_id):
+        doctor = Doctor(name, age, gender, specialization, doctor_id)
+        self.doctors.append(doctor)
+        print(f"Doctor '{name}' added to the hospital.")
+
+    def create_appointment(self, patient_id, doctor_id, date):
+        patient = self._find_patient(patient_id)
+        doctor = self._find_doctor(doctor_id)
+
+        if patient and doctor:
+            appointment = Appointment(patient, doctor, date)
+            self.appointments.append(appointment)
+            patient.appointments.append(appointment)
+            doctor.appointments.append(appointment)
+            print(
+                f"Appointment created for Patient '{patient.name}' with Doctor '{doctor.name}' on {date}."
+            )
+
+    def display_patients(self):
+        print("\nPatients:")
+        for patient in self.patients:
+            print(patient)
+
+    def display_doctors(self):
+        print("\nDoctors:")
+        for doctor in self.doctors:
+            print(doctor)
+
+    def display_appointments(self):
+        print("\nAppointments:")
+        for appointment in self.appointments:
+            print(appointment)
+
+    def _find_patient(self, patient_id):
+        for patient in self.patients:
+            if patient.patient_id == patient_id:
+                return patient
+        print(f"Patient with ID '{patient_id}' not found.")
+        return None
+
+    def _find_doctor(self, doctor_id):
+        for doctor in self.doctors:
+            if doctor.doctor_id == doctor_id:
+                return doctor
+        print(f"Doctor with ID '{doctor_id}' not found.")
+        return None
+
+
+# Example Usage
+if __name__ == "__main__":
+    hospital = Hospital("City Hospital")
+
+    # Add patients
+    hospital.add_patient("Alice", 30, "Female", "P001")
+    hospital.add_patient("Bob", 40, "Male", "P002")
+
+    # Add doctors
+    hospital.add_doctor("Dr. Smith", 50, "Male", "Cardiology", "D001")
+    hospital.add_doctor("Dr. Johnson", 45, "Female", "Neurology", "D002")
+
+    # Create appointments
+    hospital.create_appointment("P001", "D001", datetime.date(2024, 12, 15))
+    hospital.create_appointment("P002", "D002", datetime.date(2024, 12, 16))
+
+    # Display data
+    hospital.display_patients()
+    hospital.display_doctors()
+    hospital.display_appointments()
