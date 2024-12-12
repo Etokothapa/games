@@ -1,0 +1,137 @@
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Platformer Adventure")
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+RED = (255, 0, 0)
+
+# Clock and FPS
+clock = pygame.time.Clock()
+FPS = 60
+
+# Gravity constant
+GRAVITY = 0.5
+
+# Player class
+class Player(pygame.sprite.Sprite):
+    def __init__(self):
+        super().__init__()
+        self.image = pygame.Surface((40, 60))
+        self.image.fill(BLUE)
+        self.rect = self.image.get_rect()
+        self.rect.center = (WIDTH // 2, HEIGHT - 100)
+        self.vel_y = 0
+        self.jumping = False
+
+    def update(self):
+        # Horizontal movement
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]:
+            self.rect.x -= 5
+        if keys[pygame.K_RIGHT]:
+            self.rect.x += 5
+
+        # Gravity and vertical movement
+        self.vel_y += GRAVITY
+        self.rect.y += self.vel_y
+
+        # Floor collision
+        if self.rect.bottom >= HEIGHT:
+            self.rect.bottom = HEIGHT
+            self.vel_y = 0
+            self.jumping = False
+
+    def jump(self):
+        if not self.jumping:
+            self.vel_y = -10
+            self.jumping = True
+
+# Platform class
+class Platform(pygame.sprite.Sprite):
+    def __init__(self, x, y, width, height):
+        super().__init__()
+        self.image = pygame.Surface((width, height))
+        self.image.fill(GREEN)
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+
+# Obstacle class
+class Obstacle(pygame.sprite.Sprite):
+    def __init__(self, x, y, size):
+        super().__init__()
+        self.image = pygame.Surface((size, size))
+        self.image.fill(RED)
+        self.rect = self.image.get_rect()
+        self.rect.topleft = (x, y)
+
+# Initialize groups
+all_sprites = pygame.sprite.Group()
+platforms = pygame.sprite.Group()
+obstacles = pygame.sprite.Group()
+
+# Create player
+player = Player()
+all_sprites.add(player)
+
+# Create platforms
+platform_data = [(0, HEIGHT - 20, WIDTH, 20), (300, 400, 200, 20), (100, 250, 150, 20), (500, 150, 200, 20)]
+for data in platform_data:
+    platform = Platform(*data)
+    platforms.add(platform)
+    all_sprites.add(platform)
+
+# Create obstacles
+for _ in range(5):
+    x = random.randint(0, WIDTH - 40)
+    y = random.randint(50, HEIGHT - 100)
+    obstacle = Obstacle(x, y, 40)
+    obstacles.add(obstacle)
+    all_sprites.add(obstacle)
+
+# Game loop
+running = True
+while running:
+    clock.tick(FPS)
+
+    # Event handling
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        if event.type == pygame.KEYDOWN:
+            if event.key == pygame.K_SPACE:
+                player.jump()
+
+    # Update
+    all_sprites.update()
+
+    # Check for platform collision
+    platform_hits = pygame.sprite.spritecollide(player, platforms, False)
+    if platform_hits:
+        player.rect.bottom = platform_hits[0].rect.top
+        player.vel_y = 0
+        player.jumping = False
+
+    # Check for obstacle collision
+    obstacle_hits = pygame.sprite.spritecollide(player, obstacles, False)
+    if obstacle_hits:
+        print("Game Over!")
+        running = False
+
+    # Drawing
+    screen.fill(BLACK)
+    all_sprites.draw(screen)
+
+    pygame.display.flip()
+
+pygame.quit()
