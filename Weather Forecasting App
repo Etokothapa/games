@@ -1,0 +1,56 @@
+import requests
+
+# OpenWeatherMap API key (replace 'your_api_key_here' with your actual API key)
+API_KEY = "your_api_key_here"
+BASE_URL = "http://api.openweathermap.org/data/2.5/weather"
+
+def get_weather(city_name):
+    """
+    Fetch weather data for a given city from the OpenWeatherMap API.
+    """
+    params = {
+        "q": city_name,
+        "appid": API_KEY,
+        "units": "metric"  # Use metric units for temperature (Celsius)
+    }
+    
+    try:
+        response = requests.get(BASE_URL, params=params)
+        response.raise_for_status()  # Raise HTTPError for bad responses (4xx or 5xx)
+        data = response.json()
+        
+        # Extract required information
+        city = data["name"]
+        temperature = data["main"]["temp"]
+        feels_like = data["main"]["feels_like"]
+        humidity = data["main"]["humidity"]
+        weather_description = data["weather"][0]["description"]
+        
+        # Format the output
+        return (f"Weather in {city}:\n"
+                f"Temperature: {temperature}°C\n"
+                f"Feels Like: {feels_like}°C\n"
+                f"Humidity: {humidity}%\n"
+                f"Condition: {weather_description.capitalize()}")
+    except requests.exceptions.HTTPError as http_err:
+        return f"HTTP error occurred: {http_err}"
+    except requests.exceptions.RequestException as req_err:
+        return f"Request error occurred: {req_err}"
+    except KeyError:
+        return "City not found. Please check the city name."
+
+def main():
+    """
+    Main function to run the weather forecasting app.
+    """
+    print("Welcome to the Weather Forecasting App!")
+    while True:
+        city = input("\nEnter the city name (or type 'exit' to quit): ")
+        if city.lower() == "exit":
+            print("Thank you for using the Weather Forecasting App!")
+            break
+        weather_info = get_weather(city)
+        print("\n" + weather_info)
+
+if __name__ == "__main__":
+    main()
