@@ -1,0 +1,110 @@
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 800, 600
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+GOLD = (255, 223, 0)
+BLUE = (0, 0, 255)
+
+# Screen setup
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Treasure Hunt")
+
+# Clock for controlling the frame rate
+clock = pygame.time.Clock()
+FPS = 60
+
+# Player settings
+player_size = 40
+player_x = WIDTH // 2
+player_y = HEIGHT - player_size - 10
+player_speed = 5
+
+# Treasure settings
+treasure_size = 30
+treasure_x = random.randint(0, WIDTH - treasure_size)
+treasure_y = random.randint(50, HEIGHT // 2)
+
+# Obstacle settings
+obstacle_width, obstacle_height = 80, 20
+obstacle_speed = 4
+obstacles = [
+    pygame.Rect(random.randint(0, WIDTH - obstacle_width), random.randint(HEIGHT // 2, HEIGHT - 100), obstacle_width, obstacle_height)
+    for _ in range(5)
+]
+
+# Score
+score = 0
+font = pygame.font.Font(None, 36)
+
+def draw_player(x, y):
+    pygame.draw.rect(screen, BLUE, (x, y, player_size, player_size))
+
+def draw_treasure(x, y):
+    pygame.draw.rect(screen, GOLD, (x, y, treasure_size, treasure_size))
+
+def draw_obstacles(obstacles):
+    for obstacle in obstacles:
+        pygame.draw.rect(screen, BLACK, obstacle)
+
+def display_score(score):
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(score_text, (10, 10))
+
+# Game loop
+running = True
+while running:
+    screen.fill(WHITE)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Movement controls
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and player_x > 0:
+        player_x -= player_speed
+    if keys[pygame.K_RIGHT] and player_x < WIDTH - player_size:
+        player_x += player_speed
+    if keys[pygame.K_UP] and player_y > 0:
+        player_y -= player_speed
+    if keys[pygame.K_DOWN] and player_y < HEIGHT - player_size:
+        player_y += player_speed
+
+    # Check collision with treasure
+    if (treasure_x < player_x < treasure_x + treasure_size or treasure_x < player_x + player_size < treasure_x + treasure_size) and \
+       (treasure_y < player_y < treasure_y + treasure_size or treasure_y < player_y + player_size < treasure_y + treasure_size):
+        score += 1
+        treasure_x = random.randint(0, WIDTH - treasure_size)
+        treasure_y = random.randint(50, HEIGHT // 2)
+
+    # Move obstacles
+    for obstacle in obstacles:
+        obstacle.y += obstacle_speed
+        if obstacle.y > HEIGHT:
+            obstacle.y = random.randint(-100, -20)
+            obstacle.x = random.randint(0, WIDTH - obstacle_width)
+
+    # Check collision with obstacles
+    for obstacle in obstacles:
+        if obstacle.colliderect(pygame.Rect(player_x, player_y, player_size, player_size)):
+            running = False
+
+    # Draw elements
+    draw_player(player_x, player_y)
+    draw_treasure(treasure_x, treasure_y)
+    draw_obstacles(obstacles)
+    display_score(score)
+
+    pygame.display.flip()
+    clock.tick(FPS)
+
+pygame.quit()
+print(f"Game Over! Your score: {score}")
