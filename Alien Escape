@@ -1,0 +1,98 @@
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 800, 600
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
+# Screen setup
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Alien Escape")
+
+# Clock for controlling the frame rate
+clock = pygame.time.Clock()
+FPS = 60
+
+# Player settings
+player_size = 50
+player_x = WIDTH // 2
+player_y = HEIGHT - player_size - 10
+player_speed = 6
+
+# Enemy settings
+enemy_size = 50
+enemies = [
+    pygame.Rect(random.randint(0, WIDTH - enemy_size), random.randint(-600, -50), enemy_size, enemy_size)
+    for _ in range(8)
+]
+enemy_speed = 4
+
+# Safe zone
+def draw_safe_zone():
+    pygame.draw.rect(screen, GREEN, (0, HEIGHT - 50, WIDTH, 50))
+
+# Score
+score = 0
+font = pygame.font.Font(None, 36)
+
+def draw_player(x, y):
+    pygame.draw.rect(screen, BLUE, (x, y, player_size, player_size))
+
+def draw_enemies(enemies):
+    for enemy in enemies:
+        pygame.draw.rect(screen, RED, enemy)
+
+def display_score(score):
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(score_text, (10, 10))
+
+# Game loop
+running = True
+while running:
+    screen.fill(BLACK)
+    draw_safe_zone()
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Movement controls
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and player_x > 0:
+        player_x -= player_speed
+    if keys[pygame.K_RIGHT] and player_x < WIDTH - player_size:
+        player_x += player_speed
+
+    # Move enemies
+    for enemy in enemies:
+        enemy.y += enemy_speed
+        if enemy.y > HEIGHT:
+            enemy.y = random.randint(-600, -50)
+            enemy.x = random.randint(0, WIDTH - enemy_size)
+            score += 1  # Survived another wave
+
+    # Check collisions
+    player_rect = pygame.Rect(player_x, player_y, player_size, player_size)
+    for enemy in enemies:
+        if player_rect.colliderect(enemy):
+            running = False
+
+    # Draw elements
+    draw_player(player_x, player_y)
+    draw_enemies(enemies)
+    display_score(score)
+
+    pygame.display.flip()
+    clock.tick(FPS)
+
+pygame.quit()
+print(f"Game Over! Your score: {score}")
