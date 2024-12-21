@@ -1,0 +1,102 @@
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 800, 600
+TILE_SIZE = 40
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+GREEN = (0, 255, 0)
+
+# Screen setup
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Mystic Maze Escape")
+
+# Clock for controlling the frame rate
+clock = pygame.time.Clock()
+FPS = 60
+
+# Maze settings
+cols = WIDTH // TILE_SIZE
+rows = HEIGHT // TILE_SIZE
+maze = [[1 if random.random() > 0.7 else 0 for _ in range(cols)] for _ in range(rows)]
+maze[0][0] = 0  # Start point
+maze[rows - 1][cols - 1] = 0  # Exit point
+
+# Player settings
+player_x, player_y = 0, 0
+player_speed = 5
+
+# Exit point
+exit_x, exit_y = cols - 1, rows - 1
+
+# Game variables
+score = 0
+font = pygame.font.Font(None, 36)
+
+def draw_maze():
+    for y in range(rows):
+        for x in range(cols):
+            color = BLACK if maze[y][x] == 1 else WHITE
+            pygame.draw.rect(screen, color, (x * TILE_SIZE, y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+
+
+def draw_player():
+    pygame.draw.rect(screen, BLUE, (player_x * TILE_SIZE, player_y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+
+
+def draw_exit():
+    pygame.draw.rect(screen, GREEN, (exit_x * TILE_SIZE, exit_y * TILE_SIZE, TILE_SIZE, TILE_SIZE))
+
+
+def display_score():
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(score_text, (10, 10))
+
+# Game loop
+running = True
+while running:
+    screen.fill(WHITE)
+    draw_maze()
+    draw_player()
+    draw_exit()
+    display_score()
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+
+    # Movement controls
+    keys = pygame.key.get_pressed()
+    new_x, new_y = player_x, player_y
+    if keys[pygame.K_LEFT] and player_x > 0:
+        new_x -= 1
+    if keys[pygame.K_RIGHT] and player_x < cols - 1:
+        new_x += 1
+    if keys[pygame.K_UP] and player_y > 0:
+        new_y -= 1
+    if keys[pygame.K_DOWN] and player_y < rows - 1:
+        new_y += 1
+
+    # Check for collisions
+    if maze[new_y][new_x] == 0:
+        player_x, player_y = new_x, new_y
+
+    # Check for exit
+    if player_x == exit_x and player_y == exit_y:
+        score += 100
+        print("You escaped the maze!")
+        running = False
+
+    pygame.display.flip()
+    clock.tick(FPS)
+
+pygame.quit()
+print(f"Game Over! Your final score: {score}")
