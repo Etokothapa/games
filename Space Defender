@@ -1,0 +1,115 @@
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 800, 600
+
+# Colors
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+GREEN = (0, 255, 0)
+BLUE = (0, 0, 255)
+
+# Screen setup
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Space Defender")
+
+# Clock for controlling the frame rate
+clock = pygame.time.Clock()
+FPS = 60
+
+# Player settings
+player_width, player_height = 50, 50
+player_x = WIDTH // 2 - player_width // 2
+player_y = HEIGHT - player_height - 10
+player_speed = 7
+
+# Bullet settings
+bullet_width, bullet_height = 5, 10
+bullet_speed = -10
+bullets = []
+
+# Enemy settings
+enemy_width, enemy_height = 50, 50
+enemy_speed = 3
+enemies = [
+    pygame.Rect(random.randint(0, WIDTH - enemy_width), random.randint(-1000, -50), enemy_width, enemy_height)
+    for _ in range(10)
+]
+
+# Score
+score = 0
+font = pygame.font.Font(None, 36)
+
+def draw_player(x, y):
+    pygame.draw.rect(screen, BLUE, (x, y, player_width, player_height))
+
+def draw_bullets(bullets):
+    for bullet in bullets:
+        pygame.draw.rect(screen, GREEN, bullet)
+
+def draw_enemies(enemies):
+    for enemy in enemies:
+        pygame.draw.rect(screen, RED, enemy)
+
+def display_score(score):
+    score_text = font.render(f"Score: {score}", True, WHITE)
+    screen.blit(score_text, (10, 10))
+
+# Game loop
+running = True
+while running:
+    screen.fill(BLACK)
+
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+        # Fire bullet
+        if event.type == pygame.KEYDOWN and event.key == pygame.K_SPACE:
+            bullet = pygame.Rect(player_x + player_width // 2 - bullet_width // 2, player_y, bullet_width, bullet_height)
+            bullets.append(bullet)
+
+    # Movement controls
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and player_x > 0:
+        player_x -= player_speed
+    if keys[pygame.K_RIGHT] and player_x < WIDTH - player_width:
+        player_x += player_speed
+
+    # Update bullets
+    for bullet in bullets[:]:
+        bullet.y += bullet_speed
+        if bullet.y < 0:
+            bullets.remove(bullet)
+
+    # Update enemies
+    for enemy in enemies[:]:
+        enemy.y += enemy_speed
+        if enemy.y > HEIGHT:
+            enemies.remove(enemy)
+            enemies.append(pygame.Rect(random.randint(0, WIDTH - enemy_width), random.randint(-1000, -50), enemy_width, enemy_height))
+
+    # Check collisions
+    for bullet in bullets[:]:
+        for enemy in enemies[:]:
+            if bullet.colliderect(enemy):
+                bullets.remove(bullet)
+                enemies.remove(enemy)
+                enemies.append(pygame.Rect(random.randint(0, WIDTH - enemy_width), random.randint(-1000, -50), enemy_width, enemy_height))
+                score += 10
+
+    # Draw elements
+    draw_player(player_x, player_y)
+    draw_bullets(bullets)
+    draw_enemies(enemies)
+    display_score(score)
+
+    pygame.display.flip()
+    clock.tick(FPS)
+
+pygame.quit()
+print(f"Game Over! Your score: {score}")
