@@ -1,0 +1,48 @@
+import folium
+
+# Function to create an interactive map
+def create_interactive_map(center_lat, center_lon, zoom_start, markers=None):
+    """
+    Create an interactive map with markers.
+    
+    Parameters:
+    - center_lat (float): Latitude of the center of the map.
+    - center_lon (float): Longitude of the center of the map.
+    - zoom_start (int): Initial zoom level.
+    - markers (list): A list of dictionaries containing marker details (location, popup, tooltip).
+    """
+    # Initialize the map
+    my_map = folium.Map(location=[center_lat, center_lon], zoom_start=zoom_start)
+
+    # Add markers to the map if provided
+    if markers:
+        for marker in markers:
+            folium.Marker(
+                location=marker["location"],  # [latitude, longitude]
+                popup=marker.get("popup", ""),  # Popup text when clicked
+                tooltip=marker.get("tooltip", "")  # Tooltip text when hovered
+            ).add_to(my_map)
+
+    # Save the map as an HTML file
+    map_file = "interactive_map.html"
+    my_map.save(map_file)
+    print(f"Map saved as {map_file}")
+
+    return my_map
+
+# Example usage
+if __name__ == "__main__":
+    # Coordinates for the center of the map
+    center_lat = 27.692236  # Latitude
+    center_lon = 83.452322  # Longitude
+    zoom_start = 13  # Zoom level
+
+    # Example markers to add to the map
+    markers = [
+        {"location": [27.692236, 83.452322], "popup": "Main Location", "tooltip": "Center Marker"},
+        {"location": [27.700232, 83.461123], "popup": "Secondary Location", "tooltip": "Secondary Marker"},
+        {"location": [27.685500, 83.445000], "popup": "Another Location", "tooltip": "Another Marker"}
+    ]
+
+    # Create the map
+    create_interactive_map(center_lat, center_lon, zoom_start, markers)
