@@ -1,0 +1,73 @@
+import json
+
+class ExpenseTracker:
+    def __init__(self, initial_balance=0):
+        self.balance = initial_balance
+        self.expenses = []
+
+    def add_income(self, amount):
+        self.balance += amount
+        print(f"Income of ₹{amount} added. Current balance: ₹{self.balance}")
+
+    def record_expense(self, category, amount, description=""):
+        if amount > self.balance:
+            print("Insufficient balance to record this expense!")
+            return
+        self.expenses.append({
+            "category": category,
+            "amount": amount,
+            "description": description
+        })
+        self.balance -= amount
+        print(f"Expense recorded: ₹{amount} in {category}. Description: {description}")
+        print(f"Remaining balance: ₹{self.balance}")
+
+    def show_expenses(self):
+        if not self.expenses:
+            print("No expenses recorded.")
+            return
+        print("\n--- Expenses ---")
+        for i, expense in enumerate(self.expenses, start=1):
+            print(f"{i}. Category: {expense['category']}, Amount: ₹{expense['amount']}, Description: {expense['description']}")
+
+    def show_summary(self):
+        category_totals = {}
+        for expense in self.expenses:
+            category = expense["category"]
+            category_totals[category] = category_totals.get(category, 0) + expense["amount"]
+
+        print("\n--- Expense Summary ---")
+        for category, total in category_totals.items():
+            print(f"{category}: ₹{total}")
+        print(f"Total Expenses: ₹{sum(category_totals.values())}")
+        print(f"Remaining Balance: ₹{self.balance}")
+
+    def save_to_file(self, filename="expenses.json"):
+        data = {
+            "balance": self.balance,
+            "expenses": self.expenses
+        }
+        with open(filename, "w") as file:
+            json.dump(data, file, indent=4)
+        print(f"Data saved to {filename}")
+
+    def load_from_file(self, filename="expenses.json"):
+        try:
+            with open(filename, "r") as file:
+                data = json.load(file)
+                self.balance = data["balance"]
+                self.expenses = data["expenses"]
+                print(f"Data loaded from {filename}")
+        except FileNotFoundError:
+            print(f"No data file found at {filename}. Starting fresh.")
+
+# Example Usage
+if __name__ == "__main__":
+    tracker = ExpenseTracker(initial_balance=10000)  # Initialize with ₹10,000
+    tracker.record_expense("Food", 500, "Lunch at restaurant")
+    tracker.record_expense("Transport", 300, "Cab fare")
+    tracker.add_income(2000)  # Add income
+    tracker.show_expenses()
+    tracker.show_summary()
+    tracker.save_to_file()
+    tracker.load_from_file()
