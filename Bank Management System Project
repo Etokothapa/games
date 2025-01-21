@@ -1,0 +1,68 @@
+import json
+
+class BankManagementSystem:
+    def __init__(self):
+        self.accounts = {}
+
+    def create_account(self, account_number, name, initial_balance):
+        if account_number in self.accounts:
+            print("Account number already exists. Please use a unique account number.")
+            return
+        self.accounts[account_number] = {
+            "name": name,
+            "balance": initial_balance
+        }
+        print(f"Account created successfully for {name} with initial balance ₹{initial_balance}.")
+
+    def deposit(self, account_number, amount):
+        if account_number not in self.accounts:
+            print("Account not found.")
+            return
+        self.accounts[account_number]["balance"] += amount
+        print(f"₹{amount} deposited successfully. Current balance: ₹{self.accounts[account_number]['balance']}.")
+
+    def withdraw(self, account_number, amount):
+        if account_number not in self.accounts:
+            print("Account not found.")
+            return
+        if amount > self.accounts[account_number]["balance"]:
+            print("Insufficient balance.")
+            return
+        self.accounts[account_number]["balance"] -= amount
+        print(f"₹{amount} withdrawn successfully. Remaining balance: ₹{self.accounts[account_number]['balance']}.")
+
+    def view_account(self, account_number):
+        if account_number not in self.accounts:
+            print("Account not found.")
+            return
+        account = self.accounts[account_number]
+        print(f"\n--- Account Details ---")
+        print(f"Account Number: {account_number}")
+        print(f"Name: {account['name']}")
+        print(f"Balance: ₹{account['balance']}")
+
+    def save_to_file(self, filename="bank_data.json"):
+        with open(filename, "w") as file:
+            json.dump(self.accounts, file, indent=4)
+        print(f"Data saved to {filename}")
+
+    def load_from_file(self, filename="bank_data.json"):
+        try:
+            with open(filename, "r") as file:
+                self.accounts = json.load(file)
+            print(f"Data loaded from {filename}")
+        except FileNotFoundError:
+            print(f"No data file found at {filename}. Starting fresh.")
+
+# Example Usage
+if __name__ == "__main__":
+    bank = BankManagementSystem()
+    bank.load_from_file()  # Load existing data if available
+
+    # Example Operations
+    bank.create_account("123456", "Alice", 5000)
+    bank.create_account("654321", "Bob", 10000)
+    bank.deposit("123456", 2000)
+    bank.withdraw("654321", 3000)
+    bank.view_account("123456")
+    bank.save_to_file()
