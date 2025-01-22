@@ -1,0 +1,76 @@
+import os
+import pygame
+
+class MusicPlayer:
+    def __init__(self):
+        pygame.mixer.init()  # Initialize the mixer
+        self.current_track = None
+        self.is_paused = False
+
+    def load_track(self, file_path):
+        if not os.path.isfile(file_path):
+            print("File not found! Please provide a valid file path.")
+            return
+        self.current_track = file_path
+        pygame.mixer.music.load(file_path)
+        print(f"Track loaded: {os.path.basename(file_path)}")
+
+    def play(self):
+        if not self.current_track:
+            print("No track loaded. Use 'load_track' to load a file.")
+            return
+        pygame.mixer.music.play()
+        self.is_paused = False
+        print(f"Playing: {os.path.basename(self.current_track)}")
+
+    def pause(self):
+        if not pygame.mixer.music.get_busy():
+            print("No track is currently playing.")
+            return
+        pygame.mixer.music.pause()
+        self.is_paused = True
+        print("Playback paused.")
+
+    def resume(self):
+        if not self.is_paused:
+            print("Music is not paused.")
+            return
+        pygame.mixer.music.unpause()
+        self.is_paused = False
+        print("Resumed playback.")
+
+    def stop(self):
+        pygame.mixer.music.stop()
+        self.is_paused = False
+        print("Playback stopped.")
+
+# Example Usage
+if __name__ == "__main__":
+    player = MusicPlayer()
+    
+    while True:
+        print("\n--- Music Player ---")
+        print("1. Load Track")
+        print("2. Play")
+        print("3. Pause")
+        print("4. Resume")
+        print("5. Stop")
+        print("6. Exit")
+        
+        choice = input("Enter your choice: ")
+        if choice == "1":
+            file_path = input("Enter the path to the audio file (MP3/WAV): ")
+            player.load_track(file_path)
+        elif choice == "2":
+            player.play()
+        elif choice == "3":
+            player.pause()
+        elif choice == "4":
+            player.resume()
+        elif choice == "5":
+            player.stop()
+        elif choice == "6":
+            print("Exiting Music Player. Goodbye!")
+            break
+        else:
+            print("Invalid choice. Please try again.")
