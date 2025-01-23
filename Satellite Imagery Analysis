@@ -1,0 +1,54 @@
+import rasterio
+from rasterio.plot import show
+import numpy as np
+import matplotlib.pyplot as plt
+
+# Function to load and display a satellite image
+def load_and_display_image(file_path):
+    with rasterio.open(file_path) as src:
+        print(f"Satellite Image Details:\n{src.meta}")
+        
+        # Read and plot the image
+        image = src.read(1)  # Read the first band (grayscale or red)
+        plt.figure(figsize=(10, 8))
+        plt.title("Satellite Image (Band 1)")
+        plt.imshow(image, cmap='gray')
+        plt.colorbar(label='Pixel Intensity')
+        plt.show()
+        
+        return src, image
+
+# Function to calculate NDVI (Normalized Difference Vegetation Index)
+def calculate_ndvi(red_band, nir_band):
+    # Avoid division by zero
+    np.seterr(divide='ignore', invalid='ignore')
+    
+    # NDVI formula: (NIR - Red) / (NIR + Red)
+    ndvi = (nir_band - red_band) / (nir_band + red_band)
+    return ndvi
+
+# Display NDVI results
+def display_ndvi(ndvi):
+    plt.figure(figsize=(10, 8))
+    plt.title("NDVI Map")
+    plt.imshow(ndvi, cmap='RdYlGn')  # Vegetation is green; bare areas are red
+    plt.colorbar(label='NDVI Value')
+    plt.show()
+
+# Example usage
+if __name__ == "__main__":
+    # Replace with your GeoTIFF file path
+    satellite_image_path = "example_satellite_image.tif"
+
+    # Load and display the satellite image
+    src, _ = load_and_display_image(satellite_image_path)
+
+    # Assuming Band 3 (Red) and Band 4 (NIR) are used for NDVI
+    red_band = src.read(3)  # Band 3
+    nir_band = src.read(4)  # Band 4
+
+    # Calculate NDVI
+    ndvi = calculate_ndvi(red_band, nir_band)
+
+    # Display the NDVI map
+    display_ndvi(ndvi)
