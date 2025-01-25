@@ -1,0 +1,153 @@
+from flask import Flask, render_template_string, redirect, url_for, request, session, flash
+
+app = Flask(__name__)
+app.secret_key = "your_secret_key"
+
+# In-memory product database
+products = {
+    1: {"name": "Laptop", "description": "High-performance laptop.", "price": 999.99},
+    2: {"name": "Phone", "description": "Latest smartphone.", "price": 699.99},
+    3: {"name": "Headphones", "description": "Noise-cancelling headphones.", "price": 199.99},
+}
+
+# HTML templates as strings
+base_template = """
+<!DOCTYPE html>
+<html>
+<head>
+    <title>E-commerce</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 0; padding: 0; }
+        header { background: #333; color: white; padding: 10px; }
+        header a { color: white; text-decoration: none; margin: 0 10px; }
+        .container { padding: 20px; }
+        .product { border: 1px solid #ccc; padding: 10px; margin: 10px; display: inline-block; width: 30%; }
+        table { width: 100%; border-collapse: collapse; margin-top: 20px; }
+        th, td { border: 1px solid #ccc; padding: 10px; text-align: left; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>E-commerce Website</h1>
+        <a href="{{ url_for('index') }}">Home</a>
+        <a href="{{ url_for('cart') }}">Cart</a>
+    </header>
+    <div class="container">
+        {% with messages = get_flashed_messages() %}
+        {% if messages %}
+            <ul style="color: green;">
+                {% for message in messages %}
+                    <li>{{ message }}</li>
+                {% endfor %}
+            </ul>
+        {% endif %}
+        {% endwith %}
+        {% block content %}{% endblock %}
+    </div>
+</body>
+</html>
+"""
+
+index_template = """
+{% extends base_template %}
+{% block content %}
+<h2>Products</h2>
+<div>
+    {% for product_id, product in products.items() %}
+    <div class="product">
+        <h3>{{ product['name'] }}</h3>
+        <p>{{ product['description'] }}</p>
+        <p>Price: ${{ product['price'] }}</p>
+        <a href="{{ url_for('product', product_id=product_id) }}">View Product</a>
+    </div>
+    {% endfor %}
+</div>
+{% endblock %}
+"""
+
+product_template = """
+{% extends base_template %}
+{% block content %}
+<h2>{{ product['name'] }}</h2>
+<p>{{ product['description'] }}</p>
+<p>Price: ${{ product['price'] }}</p>
+<form method="POST">
+    <label for="quantity">Quantity:</label>
+    <input type="number" name="quantity" id="quantity" min="1" value="1" required>
+    <button type="submit">Add to Cart</button>
+</form>
+<a href="{{ url_for('index') }}">Back to Home</a>
+{% endblock %}
+"""
+
+cart_template = """
+{% extends base_template %}
+{% block content %}
+<h2>Your Cart</h2>
+{% if cart_items %}
+<table>
+    <tr>
+        <th>Product</th>
+        <th>Quantity</th>
+        <th>Subtotal</th>
+    </tr>
+    {% for item in cart_items %}
+    <tr>
+        <td>{{ item['product']['name'] }}</td>
+        <td>{{ item['quantity'] }}</td>
+        <td>${{ item['subtotal'] }}</td>
+    </tr>
+    {% endfor %}
+</table>
+<p><strong>Total:</strong> ${{ total }}</p>
+<a href="{{ url_for('checkout') }}">Checkout</a>
+{% else %}
+<p>Your cart is empty.</p>
+{% endif %}
+<a href="{{ url_for('index') }}">Continue Shopping</a>
+{% endblock %}
+"""
+
+# Routes
+@app.route("/")
+def index():
+    return render_template_string(index_template, base_template=base_template, products=products)
+
+@app.route("/product/<int:product_id>", methods=["GET", "POST"])
+def product(product_id):
+    product = products.get(product_id)
+    if not product:
+        return "Product not found", 404
+
+    if request.method == "POST":
+        quantity = int(request.form["quantity"])
+        cart = session.get("cart", {})
+        cart[product_id] = cart.get(product_id, 0) + quantity
+        session["cart"] = cart
+        flash(f"{product['name']} added to cart!")
+        return redirect(url_for("cart"))
+
+    return render_template_string(product_template, base_template=base_template, product=product)
+
+@app.route("/cart")
+def cart():
+    cart = session.get("cart", {})
+    cart_items = []
+    total = 0
+    for product_id, quantity in cart.items():
+        product = products.get(product_id)
+        if product:
+            subtotal = product["price"] * quantity
+            total += subtotal
+            cart_items.append({"product": product, "quantity": quantity, "subtotal": subtotal})
+    return render_template_string(cart_template, base_template=base_template, cart_items=cart_items, total=total)
+
+@app.route("/checkout")
+def checkout():
+    session.pop("cart", None)
+    flash("Thank you for your purchase!")
+    return redirect(url_for("index"))
+
+# Run the app
+if __name__ == "__main__":
+    app.run(debug=True)
