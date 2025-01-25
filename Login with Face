@@ -1,0 +1,87 @@
+import cv2
+import face_recognition
+import os
+
+# Function to load known face encodings and names
+def load_known_faces(directory):
+    known_encodings = []
+    known_names = []
+
+    for filename in os.listdir(directory):
+        filepath = os.path.join(directory, filename)
+        image = face_recognition.load_image_file(filepath)
+        encoding = face_recognition.face_encodings(image)[0]
+        known_encodings.append(encoding)
+        known_names.append(os.path.splitext(filename)[0])  # Use filename as the name
+
+    return known_encodings, known_names
+
+# Function to perform face login
+def login_with_face(known_encodings, known_names):
+    # Start webcam
+    video_capture = cv2.VideoCapture(0)
+    print("Webcam started. Please look into the camera...")
+
+    while True:
+        # Capture a single frame
+        ret, frame = video_capture.read()
+        if not ret:
+            print("Failed to capture frame. Exiting...")
+            break
+
+        # Resize frame for faster processing
+        small_frame = cv2.resize(frame, (0, 0), fx=0.25, fy=0.25)
+        rgb_small_frame = small_frame[:, :, ::-1]  # Convert BGR to RGB
+
+        # Find all face locations and encodings in the frame
+        face_locations = face_recognition.face_locations(rgb_small_frame)
+        face_encodings = face_recognition.face_encodings(rgb_small_frame, face_locations)
+
+        for face_encoding in face_encodings:
+            matches = face_recognition.compare_faces(known_encodings, face_encoding, tolerance=0.5)
+            name = "Unknown"
+
+            # Find the best match
+            if True in matches:
+                match_index = matches.index(True)
+                name = known_names[match_index]
+
+            # Display the result
+            for (top, right, bottom, left) in face_locations:
+                top, right, bottom, left = top * 4, right * 4, bottom * 4, left * 4  # Scale back up
+                cv2.rectangle(frame, (left, top), (right, bottom), (0, 255, 0), 2)
+                cv2.putText(frame, f"Hello, {name}!", (left + 6, bottom - 6), cv2.FONT_HERSHEY_SIMPLEX, 0.6, (0, 255, 0), 2)
+
+            # Check if the user is authenticated
+            if name != "Unknown":
+                print(f"Login successful! Welcome, {name}.")
+                video_capture.release()
+                cv2.destroyAllWindows()
+                return True
+
+        # Show the video feed
+        cv2.imshow("Face Login", frame)
+
+        # Break the loop with 'q'
+        if cv2.waitKey(1) & 0xFF == ord('q'):
+            break
+
+    video_capture.release()
+    cv2.destroyAllWindows()
+    print("Login failed. Exiting...")
+    return False
+
+# Example usage
+if __name__ == "__main__":
+    # Path to the folder containing images of authorized users
+    known_faces_dir = "known_faces"
+
+    # Load known faces
+    print("Loading known faces...")
+    known_encodings, known_names = load_known_faces(known_faces_dir)
+
+    # Perform face login
+    if login_with_face(known_encodings, known_names):
+        print("Access Granted!")
+    else:
+        print("Access Denied.")
