@@ -1,0 +1,74 @@
+from flask import Flask, render_template_string, request
+import yfinance as yf
+
+app = Flask(__name__)
+
+# HTML template for the tracker
+html_template = """
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Stock Price Tracker</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 20px; padding: 0; background-color: #f4f4f9; color: #333; }
+        h1 { text-align: center; color: #4CAF50; }
+        form { text-align: center; margin-bottom: 20px; }
+        input { padding: 10px; margin: 10px; border-radius: 5px; border: 1px solid #ccc; }
+        button { padding: 10px 20px; background-color: #4CAF50; color: white; border: none; border-radius: 5px; cursor: pointer; }
+        button:hover { background-color: #45a049; }
+        .stock-info { text-align: center; margin-top: 20px; }
+    </style>
+</head>
+<body>
+    <h1>Stock Price Tracker</h1>
+    <form method="POST">
+        <input type="text" name="symbol" placeholder="Enter stock symbol (e.g., AAPL)" required>
+        <button type="submit">Get Price</button>
+    </form>
+    {% if stock_data %}
+        <div class="stock-info">
+            <h2>Stock: {{ stock_data['symbol'] }}</h2>
+            <p><strong>Current Price:</strong> ${{ stock_data['price'] }}</p>
+            <p><strong>Open:</strong> ${{ stock_data['open'] }}</p>
+            <p><strong>High:</strong> ${{ stock_data['high'] }}</p>
+            <p><strong>Low:</strong> ${{ stock_data['low'] }}</p>
+        </div>
+    {% elif error %}
+        <div class="stock-info">
+            <p style="color: red;">{{ error }}</p>
+        </div>
+    {% endif %}
+</body>
+</html>
+"""
+
+@app.route("/", methods=["GET", "POST"])
+def stock_tracker():
+    stock_data = None
+    error = None
+
+    if request.method == "POST":
+        symbol = request.form.get("symbol").upper()
+
+        try:
+            stock = yf.Ticker(symbol)
+            info = stock.history(period="1d")
+            if info.empty:
+                raise ValueError("Invalid stock symbol or no data available.")
+            
+            stock_data = {
+                "symbol": symbol,
+                "price": round(info['Close'].iloc[-1], 2),
+                "open": round(info['Open'].iloc[-1], 2),
+                "high": round(info['High'].iloc[-1], 2),
+                "low": round(info['Low'].iloc[-1], 2),
+            }
+        except Exception as e:
+            error = f"Could not retrieve stock data: {str(e)}"
+
+    return render_template_string(html_template, stock_data=stock_data, error=error)
+
+if __name__ == "__main__":
+    app.run(debug=True)
