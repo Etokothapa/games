@@ -1,0 +1,59 @@
+import cv2
+import numpy as np
+
+# Load video or image feed
+video_path = "parking_lot.mp4"  # Replace with your video file path
+cap = cv2.VideoCapture(video_path)
+
+# Pre-defined parking space coordinates (rectangles)
+# Format: [(x1, y1, x2, y2), ...] where (x1, y1) is the top-left corner, (x2, y2) is the bottom-right
+parking_spaces = [
+    (50, 100, 150, 200),
+    (200, 100, 300, 200),
+    (350, 100, 450, 200),
+]
+
+# Threshold for detecting if a space is occupied (adjust as needed)
+occupied_threshold = 0.4  # Percentage of area covered by objects to be considered "occupied"
+
+def check_parking_space(frame, space):
+    """Checks if a parking space is occupied."""
+    x1, y1, x2, y2 = space
+    roi = frame[y1:y2, x1:x2]  # Extract region of interest
+    gray = cv2.cvtColor(roi, cv2.COLOR_BGR2GRAY)  # Convert to grayscale
+    blur = cv2.GaussianBlur(gray, (5, 5), 0)  # Apply Gaussian blur
+    _, binary = cv2.threshold(blur, 150, 255, cv2.THRESH_BINARY_INV)  # Thresholding
+    
+    # Calculate occupancy percentage
+    occupied_area = cv2.countNonZero(binary)
+    total_area = binary.shape[0] * binary.shape[1]
+    occupancy = occupied_area / total_area
+    
+    return occupancy > occupied_threshold
+
+while True:
+    ret, frame = cap.read()
+    if not ret:
+        break
+
+    # Process each parking space
+    for idx, space in enumerate(parking_spaces):
+        x1, y1, x2, y2 = space
+        is_occupied = check_parking_space(frame, space)
+
+        # Draw rectangle and label
+        color = (0, 0, 255) if is_occupied else (0, 255, 0)  # Red for occupied, green for vacant
+        label = "Occupied" if is_occupied else "Vacant"
+        cv2.rectangle(frame, (x1, y1), (x2, y2), color, 2)
+        cv2.putText(frame, label, (x1, y1 - 10), cv2.FONT_HERSHEY_SIMPLEX, 0.5, color, 2)
+
+    # Display the frame
+    cv2.imshow("Parking Space Detection", frame)
+
+    # Break on 'q' key press
+    if cv2.waitKey(1) & 0xFF == ord('q'):
+        break
+
+# Release resources
+cap.release()
+cv2.destroyAllWindows()
