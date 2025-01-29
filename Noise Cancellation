@@ -1,0 +1,49 @@
+import numpy as np
+import scipy.io.wavfile as wav
+import pywt
+import matplotlib.pyplot as plt
+from scipy.fftpack import fft, ifft
+
+def read_audio(filename):
+    rate, data = wav.read(filename)
+    return rate, data
+
+def save_audio(filename, rate, data):
+    wav.write(filename, rate, np.int16(data))
+
+def noise_reduction_wavelet(data, wavelet='db1', level=1):
+    coeffs = pywt.wavedec(data, wavelet, level=level)
+    sigma = np.median(np.abs(coeffs[-1])) / 0.6745
+    threshold = sigma * np.sqrt(2 * np.log(len(data)))
+    coeffs_thresholded = [pywt.threshold(c, threshold, mode='soft') for c in coeffs]
+    return pywt.waverec(coeffs_thresholded, wavelet)
+
+def noise_reduction_fft(data, threshold=1e3):
+    transformed = fft(data)
+    transformed[np.abs(transformed) < threshold] = 0
+    return np.real(ifft(transformed))
+
+def plot_audio(original, filtered):
+    plt.figure(figsize=(12, 6))
+    plt.subplot(2, 1, 1)
+    plt.plot(original, label='Original')
+    plt.legend()
+    plt.subplot(2, 1, 2)
+    plt.plot(filtered, label='Filtered', color='r')
+    plt.legend()
+    plt.show()
+
+if __name__ == "__main__":
+    filename = 'input.wav'  # Replace with your file
+    rate, data = read_audio(filename)
+    
+    if len(data.shape) > 1:  # Convert stereo to mono
+        data = np.mean(data, axis=1)
+    
+    filtered_wavelet = noise_reduction_wavelet(data)
+    filtered_fft = noise_reduction_fft(data)
+    
+    save_audio('output_wavelet.wav', rate, filtered_wavelet)
+    save_audio('output_fft.wav', rate, filtered_fft)
+    
+    plot_audio(data, filtered_wavelet)
