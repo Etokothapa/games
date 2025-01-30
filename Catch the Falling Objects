@@ -1,0 +1,88 @@
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Game Constants
+WIDTH, HEIGHT = 800, 600
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+BASKET_WIDTH, BASKET_HEIGHT = 100, 20
+APPLE_RADIUS = 10
+BASKET_SPEED = 10
+APPLE_SPEED = 5
+
+# Setup Display
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Catch the Falling Objects")
+clock = pygame.time.Clock()
+
+# Basket Class
+class Basket:
+    def __init__(self):
+        self.x = WIDTH // 2 - BASKET_WIDTH // 2
+        self.y = HEIGHT - 50
+        self.width = BASKET_WIDTH
+        self.height = BASKET_HEIGHT
+
+    def move(self, direction):
+        if direction == "left" and self.x > 0:
+            self.x -= BASKET_SPEED
+        if direction == "right" and self.x < WIDTH - self.width:
+            self.x += BASKET_SPEED
+
+    def draw(self):
+        pygame.draw.rect(screen, BLUE, (self.x, self.y, self.width, self.height))
+
+# Apple Class
+class Apple:
+    def __init__(self):
+        self.x = random.randint(0, WIDTH - APPLE_RADIUS * 2)
+        self.y = 0
+        self.radius = APPLE_RADIUS
+        self.speed = APPLE_SPEED
+
+    def fall(self):
+        self.y += self.speed
+
+    def draw(self):
+        pygame.draw.circle(screen, RED, (self.x, self.y), self.radius)
+
+# Game Loop
+basket = Basket()
+apples = [Apple()]
+score = 0
+running = True
+while running:
+    screen.fill(WHITE)
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT]:
+        basket.move("left")
+    if keys[pygame.K_RIGHT]:
+        basket.move("right")
+    
+    for apple in apples[:]:
+        apple.fall()
+        if apple.y > HEIGHT:
+            apples.remove(apple)
+            apples.append(Apple())
+        if (basket.y < apple.y + APPLE_RADIUS and 
+            basket.x < apple.x < basket.x + basket.width):
+            apples.remove(apple)
+            apples.append(Apple())
+            score += 1
+    
+    basket.draw()
+    for apple in apples:
+        apple.draw()
+    
+    pygame.display.update()
+    clock.tick(30)
+
+pygame.quit()
