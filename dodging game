@@ -1,0 +1,67 @@
+import pygame
+import random
+
+# Initialize pygame
+pygame.init()
+
+# Game Constants
+WIDTH, HEIGHT = 800, 600
+WHITE = (255, 255, 255)
+BLACK = (0, 0, 0)
+RED = (255, 0, 0)
+
+# Setup Display
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Simple Dodging Game")
+
+# Load Assets
+player_size = 50
+player_x = WIDTH // 2 - player_size // 2
+player_y = HEIGHT - player_size - 10
+player_speed = 5
+
+enemy_size = 50
+enemy_x = random.randint(0, WIDTH - enemy_size)
+enemy_y = 0
+enemy_speed = 5
+
+clock = pygame.time.Clock()
+running = True
+score = 0
+
+# Game Loop
+while running:
+    screen.fill(WHITE)
+    
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    # Get Key Presses
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and player_x > 0:
+        player_x -= player_speed
+    if keys[pygame.K_RIGHT] and player_x < WIDTH - player_size:
+        player_x += player_speed
+    
+    # Move Enemy
+    enemy_y += enemy_speed
+    if enemy_y > HEIGHT:
+        enemy_y = 0
+        enemy_x = random.randint(0, WIDTH - enemy_size)
+        score += 1
+    
+    # Check Collision
+    if (enemy_x < player_x < enemy_x + enemy_size or enemy_x < player_x + player_size < enemy_x + enemy_size) and (
+            enemy_y < player_y < enemy_y + enemy_size or enemy_y < player_y + player_size < enemy_y + enemy_size):
+        print(f"Game Over! Your Score: {score}")
+        running = False
+    
+    # Draw Player and Enemy
+    pygame.draw.rect(screen, BLACK, (player_x, player_y, player_size, player_size))
+    pygame.draw.rect(screen, RED, (enemy_x, enemy_y, enemy_size, enemy_size))
+    
+    pygame.display.flip()
+    clock.tick(30)
+
+pygame.quit()
