@@ -1,0 +1,71 @@
+import json
+
+class PortfolioManager:
+    def __init__(self, filename='portfolio.json'):
+        self.filename = filename
+        self.load_portfolio()
+
+    def load_portfolio(self):
+        try:
+            with open(self.filename, 'r') as file:
+                self.portfolio = json.load(file)
+        except (FileNotFoundError, json.JSONDecodeError):
+            self.portfolio = {}
+
+    def save_portfolio(self):
+        with open(self.filename, 'w') as file:
+            json.dump(self.portfolio, file, indent=4)
+
+    def add_investment(self, name, quantity, buy_price):
+        if name in self.portfolio:
+            self.portfolio[name]['quantity'] += quantity
+            self.portfolio[name]['buy_price'] = buy_price
+        else:
+            self.portfolio[name] = {'quantity': quantity, 'buy_price': buy_price, 'current_price': buy_price}
+        self.save_portfolio()
+
+    def update_price(self, name, current_price):
+        if name in self.portfolio:
+            self.portfolio[name]['current_price'] = current_price
+            self.save_portfolio()
+        else:
+            print(f"Investment '{name}' not found in portfolio.")
+
+    def view_portfolio(self):
+        print("\nPortfolio Summary:")
+        total_value = 0
+        total_cost = 0
+        for name, data in self.portfolio.items():
+            value = data['quantity'] * data['current_price']
+            cost = data['quantity'] * data['buy_price']
+            total_value += value
+            total_cost += cost
+            profit_loss = value - cost
+            print(f"{name}: {data['quantity']} shares, Buy Price: {data['buy_price']}, Current Price: {data['current_price']}, Profit/Loss: {profit_loss}")
+        print(f"Total Portfolio Value: {total_value}")
+        print(f"Total Profit/Loss: {total_value - total_cost}\n")
+
+if __name__ == "__main__":
+    pm = PortfolioManager()
+    while True:
+        print("\nPortfolio Manager")
+        print("1. Add Investment")
+        print("2. Update Price")
+        print("3. View Portfolio")
+        print("4. Exit")
+        choice = input("Enter choice: ")
+        if choice == '1':
+            name = input("Enter investment name: ")
+            quantity = int(input("Enter quantity: "))
+            buy_price = float(input("Enter buy price: "))
+            pm.add_investment(name, quantity, buy_price)
+        elif choice == '2':
+            name = input("Enter investment name: ")
+            current_price = float(input("Enter current price: "))
+            pm.update_price(name, current_price)
+        elif choice == '3':
+            pm.view_portfolio()
+        elif choice == '4':
+            break
+        else:
+            print("Invalid choice. Please try again.")
