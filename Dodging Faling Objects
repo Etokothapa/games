@@ -1,0 +1,69 @@
+import pygame
+import random
+
+# Initialize Pygame
+pygame.init()
+
+# Screen dimensions
+WIDTH, HEIGHT = 800, 600
+screen = pygame.display.set_mode((WIDTH, HEIGHT))
+pygame.display.set_caption("Dodge the Falling Objects!")
+
+# Colors
+WHITE = (255, 255, 255)
+RED = (255, 0, 0)
+BLUE = (0, 0, 255)
+
+# Player properties
+player_size = 50
+player_x = WIDTH // 2
+player_y = HEIGHT - 80
+player_speed = 7
+
+# Falling object properties
+object_size = 50
+object_speed = 5
+objects = []
+
+# Clock for frame rate
+clock = pygame.time.Clock()
+
+# Main game loop
+running = True
+while running:
+    screen.fill(WHITE)
+    
+    for event in pygame.event.get():
+        if event.type == pygame.QUIT:
+            running = False
+    
+    # Get key presses
+    keys = pygame.key.get_pressed()
+    if keys[pygame.K_LEFT] and player_x > 0:
+        player_x -= player_speed
+    if keys[pygame.K_RIGHT] and player_x < WIDTH - player_size:
+        player_x += player_speed
+    
+    # Create new falling objects
+    if random.randint(1, 20) == 1:
+        object_x = random.randint(0, WIDTH - object_size)
+        objects.append([object_x, 0])
+    
+    # Move falling objects
+    for obj in objects:
+        obj[1] += object_speed
+        pygame.draw.rect(screen, RED, (obj[0], obj[1], object_size, object_size))
+    
+    # Check for collisions
+    for obj in objects:
+        if player_x < obj[0] < player_x + player_size and player_y < obj[1] + object_size < player_y + player_size:
+            running = False  # Game over
+    
+    # Draw player
+    pygame.draw.rect(screen, BLUE, (player_x, player_y, player_size, player_size))
+    
+    # Refresh screen
+    pygame.display.flip()
+    clock.tick(30)
+
+pygame.quit()
