@@ -1,0 +1,36 @@
+import pygame
+
+def snake_game():
+    pygame.init()
+    width, height = 500, 500
+    win = pygame.display.set_mode((width, height))
+    clock = pygame.time.Clock()
+    snake = [(250, 250)]
+    direction = (10, 0)
+    running = True
+    
+    while running:
+        pygame.time.delay(100)
+        for event in pygame.event.get():
+            if event.type == pygame.QUIT:
+                running = False
+        keys = pygame.key.get_pressed()
+        if keys[pygame.K_LEFT]: direction = (-10, 0)
+        if keys[pygame.K_RIGHT]: direction = (10, 0)
+        if keys[pygame.K_UP]: direction = (0, -10)
+        if keys[pygame.K_DOWN]: direction = (0, 10)
+        
+        new_head = (snake[0][0] + direction[0], snake[0][1] + direction[1])
+        snake.insert(0, new_head)
+        snake.pop()
+        
+        win.fill((0, 0, 0))
+        for segment in snake:
+            pygame.draw.rect(win, (0, 255, 0), (*segment, 10, 10))
+        pygame.display.update()
+        clock.tick(10)
+    
+    pygame.quit()
+
+if __name__ == "__main__":
+    snake_game()
